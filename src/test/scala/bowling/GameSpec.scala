@@ -1,7 +1,7 @@
 package bowling
 
 import bowling.Frame.Strike
-import bowling.Game.{NotStarted, Started}
+import bowling.Game.{GameOver, NotStarted, Started}
 import org.scalatest.{FunSpec, Matchers}
 
 class GameSpec extends FunSpec with Matchers {
@@ -94,10 +94,42 @@ class GameSpec extends FunSpec with Matchers {
       }
 
       it("up to 9 frames should be a Started game") {
-        val nineFrames = List(Frame(3, 6), Frame(3, 6), Frame(3, 6), Frame(3, 6), Frame(3, 6), Frame(3, 6), Frame(3, 6), Frame(3, 6), Frame(3, 6))
+        Game(List.fill(9)(Frame(3, 6))) shouldBe a[Started]
+        Game(List.fill(10)(Frame(3, 6))) shouldNot be(a[Started])
+      }
+    }
+  }
 
-        Game(nineFrames) shouldBe a[Started]
-        Game(Frame(1, 1) :: nineFrames) shouldNot be(a[Started])
+  describe("Game Over") {
+
+    describe("with no strike or spare") {
+      it("should calculate score") {
+        Game(List.fill(10)(Frame(0, 0))).score shouldBe 0
+        Game(List.fill(10)(Frame(3, 6))).score shouldBe 90
+      }
+    }
+
+    describe("with spare") {
+      val nineOpenFrames = List.fill(9)(Frame(3, 6))
+
+      it("before the 10th frame should calculate normally") {
+        Game(Frame(5, 5) :: nineOpenFrames).score shouldBe 94
+      }
+    }
+
+    describe("with strike") {
+      val nineOpenFrames = List.fill(9)(Frame(4, 4))
+
+      it("before the 10th frame should calculate normally") {
+        Game(Strike :: nineOpenFrames).score shouldBe 90
+      }
+    }
+
+    describe("type") {
+      it("10 frames game should be Game over") {
+        Game(List.fill(10)(Frame(4, 4))) shouldBe a[GameOver]
+        Game(List.fill(9)(Frame(4, 4))) shouldNot be(a[GameOver])
+        Game(List.fill(11)(Frame(4, 4))) shouldNot be(a[GameOver])
       }
     }
   }

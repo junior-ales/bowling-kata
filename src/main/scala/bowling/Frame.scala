@@ -11,12 +11,19 @@ object Frame {
   final case class OnGoing(bowl1: Int) extends Frame {
     def score(nextFrames: List[Frame]): Int = nextFrames match {
       case Nil => this.bowl1
-      case _ => throw new Error("OnGoing frame + other frames are forbidden")
+      case _ => throw new Error("OnGoing frame + other frames is forbidden")
     }
   }
 
   final case class Open(bowl1: Int, bowl2: Int) extends Frame {
     def score(nextFrames: List[Frame]): Int = bowl1 + bowl2
+  }
+
+  final case class FillBall(bowl1: Int, bowl2: Int, bowl3: Int) extends Frame {
+    def score(nextFrames: List[Frame]): Int = nextFrames match {
+      case Nil => bowl1 + bowl2 + bowl3
+      case _ => throw new Error("FillBall frame + other frames is forbidden")
+    }
   }
 
   final case class Spare(bowl1: Int, bowl2: Int) extends Frame {
@@ -34,13 +41,17 @@ object Frame {
       case Spare(b1, b2) :: _ => b1 + b2
       case Open(b1, b2) :: _ => b1 + b2
       case OnGoing(b) :: _ => b
+      case FillBall(b1, b2, _) :: _ => b1 + b2
     }) + this.bowl1
   }
 
   case object NoFrame extends Frame {
     def bowl1: Int = 0
 
-    def score(nextFrames: List[Frame]): Int = this.bowl1
+    def score(nextFrames: List[Frame]): Int = nextFrames match {
+      case Nil => this.bowl1
+      case _ => throw new Error("NoFrame + other frames is forbidden")
+    }
   }
 
   def apply(bowl: Int): Frame =
@@ -48,15 +59,12 @@ object Frame {
 
   def apply(bowl1: Int, bowl2: Int): Frame = Frame(OnGoing(bowl1), bowl2)
 
-  def apply(frame: OnGoing, bowl: Int): Frame = frame match {
+  def apply(bowl1: Int, bowl2: Int, bowl3: Int): Frame = FillBall(bowl1, bowl2, bowl3)
+
+  private def apply(frame: OnGoing, bowl: Int): Frame = frame match {
     case OnGoing(score) if score + bowl == 10 => Spare(score, bowl)
     case OnGoing(score) if score + bowl < 10 => Open(score, bowl)
     //case _ if bowl == 10 => throw new Error("forbidden ongoing + 10")
-  }
-
-  private def mergeFrames(frame: Frame, bowl: Int): List[Frame] = frame match {
-    case f: OnGoing => List(Frame(f, bowl))
-    case _ => List(frame, Frame(bowl))
   }
 
   def toFrames(bowls: List[Int]): List[Frame] = {
@@ -69,5 +77,10 @@ object Frame {
       case Nil => Nil
       case b :: bs => _toFrames(bs, List(Frame(b)))
     }
+  }
+
+  private def mergeFrames(frame: Frame, bowl: Int): List[Frame] = frame match {
+    case f: OnGoing => List(Frame(f, bowl))
+    case _ => List(frame, Frame(bowl))
   }
 }
