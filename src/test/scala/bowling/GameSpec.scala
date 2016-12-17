@@ -125,6 +125,22 @@ class GameSpec extends FunSpec with Matchers {
       }
     }
 
+    describe("with fill ball") {
+      val nineOpenFrames = List.fill(9)(Frame(4, 5))
+      val fillBallSpare = Frame(4, 6, 8)
+
+      val nineStrikes = List.fill(9)(Frame(10))
+      val fillBallStrike = Frame(10, 10, 10)
+
+      it("should calculate the fill ball") {
+        Game(nineOpenFrames :+ fillBallSpare).score shouldBe 99
+      }
+
+      it("should calculate the perfect game") {
+        Game(nineStrikes :+ fillBallStrike).score shouldBe 300
+      }
+    }
+
     describe("type") {
       it("10 frames game should be Game over") {
         Game(List.fill(10)(Frame(4, 4))) shouldBe a[GameOver]
