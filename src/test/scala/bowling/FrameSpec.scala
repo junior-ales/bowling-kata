@@ -74,4 +74,66 @@ class FrameSpec extends FlatSpec with Matchers {
     val frames = Frame.toFrames(List(1, 9, 8, 2, 7, 3))
     frames shouldBe List(Spare(1, 9), Spare(8, 2), Spare(7, 3))
   }
+
+  "Score of OnGoing frame" should "be the amount of its pins" in {
+    OnGoing(8).score(List()) shouldBe 8
+  }
+
+  it should "not allow other frames to be summed up" in {
+    intercept[Error] {
+      OnGoing(1).score(List(Frame(1)))
+    }
+  }
+
+  "Score of Open frame" should "be the amount of its pins" in {
+    Open(0, 0).score(List(Frame(10), Frame(5, 5))) shouldBe 0
+    Open(8, 1).score(List(Frame(10), Frame(5, 5))) shouldBe 9
+  }
+
+  "Score of Spare frame" should "add the amount of pins of the first subsequent bowl" in {
+    val spare = Spare(3, 7)
+
+    // empty and ongoing
+    spare.score(List()) shouldBe 10
+    spare.score(List(Frame(8))) shouldBe 18
+    spare.score(List(Frame(0))) shouldBe 10
+
+    // open
+    spare.score(List(Frame(0, 1))) shouldBe 10
+    spare.score(List(Frame(9, 0))) shouldBe 19
+    spare.score(List(Frame(7, 2))) shouldBe 17
+
+    // spare
+    spare.score(List(Frame(0, 10))) shouldBe 10
+    spare.score(List(Frame(9, 1))) shouldBe 19
+
+    // strike
+    spare.score(List(Frame(10))) shouldBe 20
+  }
+
+  "Score of Strike frame" should "add the amount of pins of the first and second subsequent bowl" in {
+    // empty and ongoing
+    Strike.score(List()) shouldBe 10
+    Strike.score(List(Frame(0))) shouldBe 10
+    Strike.score(List(Frame(1))) shouldBe 11
+
+    // open
+    Strike.score(List(Frame(5, 4))) shouldBe 19
+    Strike.score(List(Frame(0, 8))) shouldBe 18
+    Strike.score(List(Frame(3, 0))) shouldBe 13
+
+    // spare
+    Strike.score(List(Frame(0, 10))) shouldBe 20
+    Strike.score(List(Frame(9, 1))) shouldBe 20
+    Strike.score(List(Frame(5, 5))) shouldBe 20
+
+    // strike
+    Strike.score(List(Strike)) shouldBe 20
+    Strike.score(List(Strike, Strike)) shouldBe 30
+    Strike.score(List(Strike, Frame(1))) shouldBe 21
+    Strike.score(List(Strike, Frame(5, 3))) shouldBe 25
+    Strike.score(List(Strike, Frame(7, 3))) shouldBe 27
+    Strike.score(List(Strike, Strike, Strike)) shouldBe 30
+  }
+
 }
