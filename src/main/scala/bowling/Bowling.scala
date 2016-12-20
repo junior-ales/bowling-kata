@@ -3,5 +3,5 @@ package bowling
 import bowling.Frame.toFrames
 
 object Bowling {
-  def roll(pins: List[Int]): Game = Game(toFrames(pins))
+  def roll(bowls: List[Int]): Game = Game(toFrames(bowls))
 }

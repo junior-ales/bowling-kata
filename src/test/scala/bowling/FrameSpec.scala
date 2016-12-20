@@ -101,7 +101,7 @@ class FrameSpec extends FlatSpec with Matchers {
     Open(8, 1).score(List(Frame(10), Frame(5, 5))) shouldBe 9
     Open(1, 1).score(List(Frame(0, 10))) shouldBe 2
     Open(1, 1).score(List(Frame(2, 2))) shouldBe 2
-//    Open(1, 1).score(List(Frame(5, 5, 10))) shouldBe 2
+    Open(1, 1).score(List(Frame(5, 5, 10))) shouldBe 2
   }
 
   "Score of Spare frame" should "add the amount of pins of the first subsequent bowl" in {
