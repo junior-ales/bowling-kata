@@ -1,6 +1,6 @@
 package bowling
 
-import bowling.Frame.Strike
+import bowling.Frame.{Last, Strike}
 import bowling.Game.{GameOver, NotStarted, Started}
 import org.scalatest.{FunSpec, Matchers}
 
@@ -85,6 +85,8 @@ class GameSpec extends FunSpec with Matchers {
     }
 
     describe("type") {
+      val nineFrames = List.fill(9)(Frame(3, 6))
+
       it("one or more frames should be a Started game") {
         Game(List()) shouldNot be(a[Started])
 
@@ -94,8 +96,21 @@ class GameSpec extends FunSpec with Matchers {
       }
 
       it("up to 9 frames should be a Started game") {
-        Game(List.fill(9)(Frame(3, 6))) shouldBe a[Started]
-        Game(List.fill(10)(Frame(3, 6))) shouldNot be(a[Started])
+        Game(nineFrames) shouldBe a[Started]
+      }
+
+      it("10 frames after first bowl") {
+        Game(nineFrames :+ Last(0)) shouldBe a[Started]
+        Game(nineFrames :+ Last(10)) shouldBe a[Started]
+        Game(nineFrames :+ Last(9)) shouldBe a[Started]
+      }
+
+      it("10 frames with a strike and/or spare on the last one") {
+        Game(nineFrames :+ Last(9, Some(1))) shouldBe a[Started]
+        Game(nineFrames :+ Last(0, Some(10))) shouldBe a[Started]
+        Game(nineFrames :+ Last(4, Some(6))) shouldBe a[Started]
+        Game(nineFrames :+ Last(10, Some(10))) shouldBe a[Started]
+        Game(nineFrames :+ Last(10, Some(0))) shouldBe a[Started]
       }
     }
   }
@@ -143,9 +158,17 @@ class GameSpec extends FunSpec with Matchers {
 
     describe("type") {
       it("10 frames game should be Game over") {
-        Game(List.fill(10)(Frame(4, 4))) shouldBe a[GameOver]
-        Game(List.fill(9)(Frame(4, 4))) shouldNot be(a[GameOver])
-        Game(List.fill(11)(Frame(4, 4))) shouldNot be(a[GameOver])
+        val nineFrames = List.fill(9)(Frame(4, 4))
+
+        Game(nineFrames) shouldNot be(a[GameOver])
+        Game(nineFrames :+ Frame(10, 10, 10)) shouldBe a[GameOver]
+        Game(nineFrames :+ Frame(10, 10, 0)) shouldBe a[GameOver]
+        Game(nineFrames :+ Frame(10, 0, 0)) shouldBe a[GameOver]
+        Game(nineFrames :+ Frame(5, 5, 10)) shouldBe a[GameOver]
+        Game(nineFrames :+ Frame(0, 10, 10)) shouldBe a[GameOver]
+        Game(nineFrames :+ Frame(6, 4, 5)) shouldBe a[GameOver]
+        Game(nineFrames :+ Last(5, Some(4))) shouldBe a[GameOver]
+        Game(nineFrames :+ Last(0, Some(0))) shouldBe a[GameOver]
       }
     }
   }

@@ -1,5 +1,7 @@
 package bowling
 
+import bowling.Frame.Last
+
 sealed trait Game {
   type BowlingResult = List[(Frame, Int)]
 
@@ -27,9 +29,10 @@ object Game {
     override def frames = List()
   }
 
-  def apply(frames: List[Frame]): Game = frames.length match {
-    case 0 => NotStarted
-    case 10 => GameOver(frames)
+  def apply(frames: List[Frame]): Game = frames.lastOption match {
+    case None => NotStarted
+    case Some(_) if frames.length < 10 => Started(frames)
+    case Some(f: Last) if f.finished => GameOver(frames)
     case _ => Started(frames)
   }
 }
