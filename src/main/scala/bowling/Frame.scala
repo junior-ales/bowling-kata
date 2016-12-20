@@ -7,6 +7,7 @@ sealed trait Frame {
 }
 
 object Frame {
+
   final case class OnGoing(bowl1: Int) extends Frame {
     def score(nextFrames: List[Frame]): Int = this.bowl1
   }
@@ -70,7 +71,7 @@ object Frame {
   private def mergeFrames(frames: List[Frame], bowl: Int): List[Frame] = frames.lastOption match {
     case Some(f) if frames.length == 10 => frames.init :+ lastFrame(f, bowl)
     case Some(f: OnGoing) => frames.init :+ Frame(f, bowl)
-    case _  => frames :+ Frame(bowl)
+    case _ => frames :+ Frame(bowl)
   }
 
   private def lastFrame(frame: Frame, bowl: Int): Last = frame match {
