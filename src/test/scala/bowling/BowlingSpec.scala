@@ -2,7 +2,7 @@ package bowling
 
 import org.scalatest.{FunSpec, Matchers}
 
-class BowlingTest extends FunSpec with Matchers {
+class BowlingSpec extends FunSpec with Matchers {
 
   describe("Bowling") {
     it("should calculate a one bowl game") {

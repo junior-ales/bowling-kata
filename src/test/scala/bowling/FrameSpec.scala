@@ -75,25 +75,25 @@ class FrameSpec extends FlatSpec with Matchers {
     frames shouldBe List(Spare(1, 9), Spare(8, 2), Spare(7, 3))
   }
 
-  "Score of NoFrame" should "be always zero" in {
-    NoFrame.score(List()) shouldBe 0
+  "Create Frames from bowls" should "create 10 open frames" in {
+    toFrames(List.fill(20)(0)) shouldBe List.fill(9)(Frame(0, 0)) :+ Last(0, Some(0))
+    toFrames(List(1, 8, 1, 8, 1, 8, 1, 8, 1, 8, 1, 8, 1, 8, 1, 8, 1, 8, 1, 8)) shouldBe List.fill(9)(Frame(1, 8)) :+ Last(1, Some(8))
   }
 
-  it should "not allow other frames to be summed up" in {
-    intercept[Error] {
-      NoFrame.score(List(Frame(1)))
-    }
+  it should "create a fill ball frame when a spare or strike happens in the second and/or third last bowls" in {
+    val bowlsWithFinalStrikes = List(1, 8, 1, 8, 1, 8, 1, 8, 1, 8, 1, 8, 1, 8, 1, 8, 1, 8, 10, 10, 10)
+    val expectedFrames = List.fill(9)(Frame(1, 8)) :+ Frame(10, 10, 10)
+
+    toFrames(bowlsWithFinalStrikes) shouldBe expectedFrames
+  }
+
+  "Score of NoFrame" should "be always zero" in {
+    NoFrame.score() shouldBe 0
   }
 
   "Score of OnGoing frame" should "be the amount of its pins" in {
-    OnGoing(9).score(List()) shouldBe 9
-    OnGoing(0).score(List()) shouldBe 0
-  }
-
-  it should "not allow other frames to be summed up" in {
-    intercept[Error] {
-      OnGoing(1).score(List(Frame(1)))
-    }
+    OnGoing(9).score() shouldBe 9
+    OnGoing(0).score() shouldBe 0
   }
 
   "Score of Open frame" should "be the amount of its pins" in {
@@ -101,12 +101,12 @@ class FrameSpec extends FlatSpec with Matchers {
     Open(8, 1).score(List(Frame(10), Frame(5, 5))) shouldBe 9
     Open(1, 1).score(List(Frame(0, 10))) shouldBe 2
     Open(1, 1).score(List(Frame(2, 2))) shouldBe 2
-    Open(1, 1).score(List(Frame(5, 5, 10))) shouldBe 2
+//    Open(1, 1).score(List(Frame(5, 5, 10))) shouldBe 2
   }
 
   "Score of Spare frame" should "add the amount of pins of the first subsequent bowl" in {
     // empty and ongoing
-    Spare(3, 7).score(List()) shouldBe 10
+    Spare(3, 7).score() shouldBe 10
     Spare(3, 7).score(List(Frame(8))) shouldBe 18
     Spare(3, 7).score(List(Frame(0))) shouldBe 10
 
@@ -129,7 +129,7 @@ class FrameSpec extends FlatSpec with Matchers {
 
   "Score of Strike frame" should "add the amount of pins of the first and second subsequent bowl" in {
     // empty and ongoing
-    Strike.score(List()) shouldBe 10
+    Strike.score() shouldBe 10
     Strike.score(List(Frame(0))) shouldBe 10
     Strike.score(List(Frame(1))) shouldBe 11
 
@@ -159,17 +159,45 @@ class FrameSpec extends FlatSpec with Matchers {
     Strike.score(List(Frame(2, 8, 5))) shouldBe 20
   }
 
-  "Score of FillBall Frame" should "return the amount of pins knocked down" in {
-    FillBall(5, 5, 5).score(List()) shouldBe 15
-    FillBall(0, 10, 5).score(List()) shouldBe 15
-    FillBall(10, 5, 5).score(List()) shouldBe 20
-    FillBall(10, 10, 5).score(List()) shouldBe 25
-    FillBall(10, 10, 10).score(List()) shouldBe 30
+  "Last frame" should "have as score the amount of pins knocked down" in {
+    Frame(5, 5, 5).score() shouldBe 15
+    Frame(0, 10, 5).score() shouldBe 15
+    Frame(10, 5, 5).score() shouldBe 20
+    Frame(10, 10, 5).score() shouldBe 25
+    Frame(10, 10, 10).score() shouldBe 30
+
+    Last(0).score() shouldBe 0
+    Last(10).score() shouldBe 10
+    Last(0, Some(0)).score() shouldBe 0
+    Last(0, Some(9)).score() shouldBe 9
+    Last(10, Some(10)).score() shouldBe 20
   }
 
-  it should "not allow other frames to sum up" in {
-    intercept[Error] {
-      FillBall(5, 5, 5).score(List(Frame(3)))
-    }
+  it should "not be finished on the first bowl" in {
+    Last(0).finished shouldBe false
+    Last(1).finished shouldBe false
+    Last(10).finished shouldBe false
+    Last(9).finished shouldBe false
+  }
+
+  it should "not be finished if a spare and/or strike without fill ball" in {
+    Last(10, Some(0)).finished shouldBe false
+    Last(0, Some(10)).finished shouldBe false
+    Last(3, Some(7)).finished shouldBe false
+    Last(10, Some(10)).finished shouldBe false
+  }
+
+  it should "be finished if fill ball is rolled" in {
+    Last(10, Some(10), Some(10)).finished shouldBe true
+    Last(10, Some(10), Some(0)).finished shouldBe true
+    Last(0, Some(10), Some(0)).finished shouldBe true
+    Last(1, Some(9), Some(9)).finished shouldBe true
+  }
+
+  it should "be finished if two bowls done without strike or spare" in {
+    Last(0, Some(9)).finished shouldBe true
+    Last(9, Some(0)).finished shouldBe true
+    Last(0, Some(0)).finished shouldBe true
+    Last(1, Some(1)).finished shouldBe true
   }
 }
