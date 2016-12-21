@@ -65,6 +65,14 @@ class BowlingSpec extends FunSpec with Matchers {
         roll(List(0, 10, 54)) shouldBe a[InvalidGame]
         roll(List(0, 10, 11, 3)) shouldBe a[InvalidGame]
       }
+
+      it("should not allow invalid sequences of bowls") {
+        roll(List(1, 10)) shouldBe a[InvalidGame]
+        roll(List(3, 6, 9, 2)) shouldBe a[InvalidGame]
+        roll(List.fill(21)(0)) shouldBe a[InvalidGame]
+        roll(List.fill(22)(5)) shouldBe a[InvalidGame]
+        roll(List(5, 6)) shouldBe a[InvalidGame]
+      }
     }
 
   }

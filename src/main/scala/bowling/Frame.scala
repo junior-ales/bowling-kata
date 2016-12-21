@@ -50,23 +50,28 @@ object Frame {
     def score(nextFrames: List[Frame]): Int = this.bowl1
   }
 
-  def apply(bowl: Int): Frame =
-    if (bowl == 10) Strike
-    else OnGoing(bowl)
+  def apply(bowl: Int): Frame = bowl match {
+    case p if p < 0 => throw new Error(s"Negative number is forbidden bowl: $p")
+    case p if p > 10 => throw new Error(s"Impossible to knock down more than 10 pins: $p")
+    case 10 => Strike
+    case _ => OnGoing(bowl)
+  }
 
   def apply(bowl1: Int, bowl2: Int): Frame = Frame(OnGoing(bowl1), bowl2)
 
   def apply(bowl1: Int, bowl2: Int, bowl3: Int): Frame = Last(bowl1, Some(bowl2), Some(bowl3))
 
-  private def apply(frame: OnGoing, bowl: Int): Frame = frame match {
-    case OnGoing(score) if score + bowl == 10 => Spare(score, bowl)
-    case OnGoing(score) => Open(score, bowl)
+  private def apply(frame: OnGoing, bowl: Int): Frame = {
+    val validBowl = Frame(bowl).bowl1
+
+    frame match {
+      case OnGoing(score) if score + validBowl == 10 => Spare(score, validBowl)
+      case OnGoing(score) if score + validBowl < 10 => Open(score, validBowl)
+      case _ => throw new Error(s"Invalid input: $bowl after ${frame.bowl1}")
+    }
   }
 
-  def toFrames(bowls: List[Int]): List[Frame] = {
-    if (bowls.isEmpty) Nil
-    else bowls.foldLeft(List.empty[Frame])(mergeFrames)
-  }
+  def toFrames(bowls: List[Int]): List[Frame] =  bowls.foldLeft(List.empty[Frame])(mergeFrames)
 
   private def mergeFrames(frames: List[Frame], bowl: Int): List[Frame] = frames.lastOption match {
     case Some(f) if frames.length == 10 => frames.init :+ lastFrame(f, bowl)
@@ -79,9 +84,9 @@ object Frame {
     case OnGoing(b) => Last(b, Some(bowl))
     case Spare(b1, b2) => Last(b1, Some(b2), Some(bowl))
     case Strike => Last(10, Some(bowl))
+    case f: Last if f.finished => throw new Error(s"forbidden: no more bowls allowed")
     case Last(b1, None, None) => Last(b1, Some(bowl))
     case Last(b1, Some(b2), None) => Last(b1, Some(b2), Some(bowl))
-    case _ => throw new Error(s"forbidden: no more bowls allowed")
   }
 
 }
