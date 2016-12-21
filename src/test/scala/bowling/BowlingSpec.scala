@@ -1,7 +1,7 @@
 package bowling
 
 import bowling.Bowling.roll
-import bowling.Game.{GameOver, NotStarted, Started}
+import bowling.Game.{GameOver, InvalidGame, NotStarted, Started}
 import org.scalatest.{FunSpec, Matchers}
 
 class BowlingSpec extends FunSpec with Matchers {
@@ -48,6 +48,22 @@ class BowlingSpec extends FunSpec with Matchers {
         val bowls = List(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
         roll(bowls).score shouldBe 0
+      }
+    }
+
+    describe("invalid input") {
+      it("should not allow negative numbers") {
+        roll(List(-83)) shouldBe a[InvalidGame]
+        roll(List(-3, -7)) shouldBe a[InvalidGame]
+        roll(List(0, -10, 0)) shouldBe a[InvalidGame]
+        roll(List(0, 10, -1, 3)) shouldBe a[InvalidGame]
+      }
+
+      it("should not allow numbers more than 10") {
+        roll(List(83)) shouldBe a[InvalidGame]
+        roll(List(3, 17)) shouldBe a[InvalidGame]
+        roll(List(0, 10, 54)) shouldBe a[InvalidGame]
+        roll(List(0, 10, 11, 3)) shouldBe a[InvalidGame]
       }
     }
 

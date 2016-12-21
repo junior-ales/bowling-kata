@@ -25,11 +25,20 @@ object Game {
 
   final case class GameOver(frames: List[Frame]) extends Game
 
+  final case class InvalidGame(error: Error) extends Game {
+    def frames: List[Frame] = List()
+  }
+
   case object NotStarted extends Game {
     override def frames = List()
   }
 
-  def apply(frames: List[Frame]): Game = frames.lastOption match {
+  def apply(frames: Either[Error, List[Frame]]): Game = frames match {
+    case Right(fs) => createValidGame(fs)
+    case Left(error) => InvalidGame(error)
+  }
+
+  private def createValidGame(frames: List[Frame]): Game = frames.lastOption match {
     case None => NotStarted
     case Some(_) if frames.length < 10 => Started(frames)
     case Some(f: Last) if f.finished => GameOver(frames)
